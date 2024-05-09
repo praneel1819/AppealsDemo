@@ -1,0 +1,503 @@
+openapi: 3.0.0
+info:
+  title: Node.js SSL API
+  version: 1.0.0
+  description: API for managing appeals with SSL
+
+components:
+  schemas:
+    Appeal:
+      type: object
+      properties:
+        appealId:
+          type: integer
+        claimId:
+          type: integer
+        memberId:
+          type: integer
+        patientName:
+          type: string
+        appealReason:
+          type: string
+        procedureCode:
+          type: string
+        physicianName:
+          type: string
+        physicianId:
+          type: integer
+        submissionDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [Received, Acknowledged, In-review, Approved, Rejected, 'Approvedloweramt']
+    ValidationResponse:
+      type: object
+      properties:
+        appealId:
+          type: integer
+        claimId:
+          type: integer
+        memberId:
+          type: integer
+        patientName:
+          type: string
+        appealReason:
+          type: string
+        procedureCode:
+          type: string
+        physicianName:
+          type: string
+        physicianId:
+          type: integer
+        submissionDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: ["Received", "Acknowledged", "In-review", "Approved", "Rejected", "Approvedloweramt"]
+        groupNumber:
+          type: integer
+        providerName:
+          type: string
+        serviceDate:
+          type: string
+          format: date
+        claimAmount:
+          type: string
+        adjudicatedAmount:
+          type: string
+        claimStatus:
+          type: string
+        claimProcedureCode:
+          type: string
+        validationResponse:
+          type: string
+    Benefit:
+      type: object
+      properties:
+        appealId:
+          type: integer
+        benefitId:
+          type: integer
+        groupNumber:
+          type: integer
+        memberId:
+          type: integer
+        patientName:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date
+        effectiveTo:
+          type: string
+          format: date
+        providerName:
+          type: string
+        payerNetworkId:
+          type: string
+        planId:
+          type: string
+        primaryCarePhysician:
+          type: string
+        coverageType:
+          type: string
+        copay:
+          type: string
+        deductible:
+          type: string
+        activeStatus:
+          type: string
+    Claim:
+      type: object
+      properties:
+        appealId:
+          type: integer
+        claimId:
+          type: integer
+        groupNumber:
+          type: integer
+        memberId:
+          type: integer
+        patientName:
+          type: string
+        providerName:
+          type: string
+        adjudicatedAmount:
+          type: string
+        procedureCode:
+          type: string
+        claimAmount:
+          type: string
+        claimStatus:
+          type: string
+        serviceDate:
+          type: string
+          format: date
+    
+    # New operation schema for ValidateAppeal
+    ValidateAppealResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        response:
+          $ref: '#/components/schemas/ValidationResponse'
+    
+    # New operation schema for AckLetterAppeal
+    AckLetterAppealResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        response:
+          type: string
+    
+    
+
+tags:
+  - name: Appeals
+    description: Operations related to appeals
+  - name: Benefits
+    description: Operations related to benefits
+  - name: Claims
+    description: Operations related to claims and managing appeals with SSL
+  
+servers:
+  - url: https://c804-136-54-20-93.ngrok-free.app
+paths:
+  /appeals:
+    get:
+      summary: Get all appeals
+      tags:
+        - Appeals
+      responses:
+        '200':
+          description: Successful response
+
+    post:
+      summary: Create a new appeal
+      tags:
+        - Appeals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Appeal'
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+  
+  /appeals/validate/{appealId}:
+    get:  
+      summary: Validate an appeal by ID
+      tags:
+        - Appeals
+      parameters:
+        - in: path  
+          name: appealId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateAppealResponse'
+        '404':
+          description: Appeal not found
+
+  /appeals/ackLetter/{appealId}:
+    get:  
+      summary: AckLetter of an appeal by ID
+      tags:
+        - Appeals
+      parameters:
+        - in: path  
+          name: appealId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AckLetterAppealResponse'
+        '404':
+          description: Appeal not found           
+
+  /appeals/details/{appealId}:
+    get:
+      summary: Get details of an Appeal, Benefit, and Claim by Appeal ID
+      tags: [Appeals]
+      parameters:
+        - in: path
+          name: appealId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  response:
+                    $ref: '#/components/schemas/ValidationResponse'
+        '404':
+          description: Appeal, Benefit, or Claim not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: object
+                    properties:
+                      response:
+                        type: string
+                        
+
+  '/appeals/{appealId}':
+    get:
+      summary: Get an appeal by ID
+      tags:
+        - Appeals
+      parameters:
+        - in: path
+          name: appealId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+        '404':
+          description: Appeal not found
+
+    put:
+      summary: Update an appeal by ID
+      tags:
+        - Appeals
+      parameters:
+        - in: path
+          name: appealId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Appeal'
+      responses:
+        '200':
+          description: Successful response
+        '404':
+          description: Appeal not found
+
+    delete:
+      summary: Delete an appeal by ID
+      tags:
+        - Appeals
+      parameters:
+        - in: path
+          name: appealId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Appeal deleted successfully
+        '404':
+          description: Appeal not found
+  /appeals/status/{status}:
+    get:
+      summary: Get appeals by status
+      tags:
+        - Appeals
+      parameters:
+        - in: path
+          name: status
+          required: true
+          schema:
+            type: string
+            enum: [Received, Acknowledged, In-review, Approved, Rejected, Approvedloweramt]
+      responses:
+        '200':
+          description: Successful response
+        '404':
+          description: No appeals found for the specified status
+
+   
+  /benefits:
+    get:
+      summary: Get all benefits
+      tags:
+        - Benefits
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Benefit'
+
+    post:
+      summary: Create a new benefit
+      tags:
+        - Benefits
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Benefit'
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+
+  '/benefits/{memberId}':
+    get:
+      summary: Get a benefit by ID
+      tags:
+        - Benefits
+      parameters:
+        - in: path
+          name: memberId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Benefit'
+        '404':
+          description: Benefit not found
+
+    delete:
+      summary: Delete a benefit by ID
+      tags:
+        - Benefits
+      parameters:
+        - in: path
+          name: memberId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Benefit deleted successfully
+        '404':
+          description: Benefit not found
+
+  /claims:
+    get:
+      summary: Get all claims
+      tags:
+        - Claims
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Claim'
+
+    post:
+      summary: Create a new claim
+      tags:
+        - Claims
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Claim'
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+
+  '/claims/{claimId}':
+    get:
+      summary: Get a claim by ID
+      tags:
+        - Claims
+      parameters:
+        - in: path
+          name: claimId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+        '404':
+          description: Claim not found
+
+    put:
+      summary: Update a claim by ID
+      tags:
+        - Claims
+      parameters:
+        - in: path
+          name: claimId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Claim'
+      responses:
+        '200':
+          description: Successful response
+        '404':
+          description: Claim not found
+
+    delete:
+      summary: Delete a claim by ID
+      tags:
+        - Claims
+      parameters:
+        - in: path
+          name: claimId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Claim deleted successfully
+        '404':
+          description: Claim not found
